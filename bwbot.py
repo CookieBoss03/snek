@@ -3,10 +3,16 @@
 import asyncio
 import logic
 import secret  # username, password
+import time
 
 
 HOST = "gpn-tron.duckdns.org"
 PORT = 4000
+TIME_START = time.time()
+
+
+def timestamp():
+    return f"[{time.time() - TIME_START:9.3f}]"
 
 
 class PhysicalCallbackInterface(logic.CallbackInterface):
@@ -16,14 +22,14 @@ class PhysicalCallbackInterface(logic.CallbackInterface):
     def send(self, *args):
         assert len(args) > 0
         args_string = '|'.join(arg for arg in args)
-        print(f"OO {args_string.replace(secret.PASSWORD, 'PASSWORD')}")
+        print(f"OO {timestamp()} {args_string.replace(secret.PASSWORD, 'PASSWORD')}")
         self.writer.write(args_string.encode() + b"\n")
 
     def log(self, *args):
-        print(f"== {args}")
+        print(f"== {timestamp()} {args}")
 
     def die(self):
-        print(f"yolo, now ded")
+        print(f"XX {timestamp()} yolo, now ded")
         exit(1)
 
 
@@ -34,7 +40,7 @@ async def main():
     while True:
         line_bytes = await reader.readline()
         line = line_bytes.decode(errors="replace").rstrip("\n")
-        print(f"II >{line}<")
+        print(f"II {timestamp()} >{line}<")
         parts = line.split("|")
         game.digest(parts[0], parts[1:])
         await writer.drain()

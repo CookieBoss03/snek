@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logic
 import unittest
 
 TEST_USERNAME = "LOL"
@@ -13,14 +14,14 @@ def with_battery(test_battery):
         def spoof_test_fn(testcase_self):
             for i, entry in enumerate(test_battery):
                 with testcase_self.subTest(i=i, entry=entry):
-                    fn(testcase_self, *entry)
+                    fn(testcase_self, entry)
 
         return spoof_test_fn
 
     return decorator
 
 
-class MockInterface:
+class MockInterface(logic.CallbackInterface):
     def __init__(self):
         self.actions = []
 
@@ -35,15 +36,58 @@ class MockInterface:
 
 
 BEHAVIOR_TESTS = [
+    # Does this even work?
     [],
+    # Does starting even work?
     [
-        [["motd", "ohai"], ["join", TEST_USERNAME, TEST_PASSWORD]],
+        [
+            ["motd", "ohai"],
+            [
+                ("send", "join", TEST_USERNAME, TEST_PASSWORD),
+                ("send", "chat", "ohai"),
+            ],
+        ],
+    ],
+    # Do we die after an error?
+    [
+        [
+            ["error", "505 or something"],
+            [
+                ("die"),
+            ],
+        ],
+    ],
+    # Do we crash after a chat message?
+    [
+        [
+            ["chat", "42", "henlo"],
+            [
+            ],
+        ],
+    ],
+    [
+        [
+            ["motd", "ohai"],
+            [
+                ("send", "join", TEST_USERNAME, TEST_PASSWORD),
+                ("send", "chat", "ohai"),
+            ],
+        ],
+        [
+            ["chat", "42", "henlo"],
+            [
+            ],
+        ],
     ],
 ]
 
-class BehaviorTests:
-    def test_import(self):
+class BehaviorTests(unittest.TestCase):
+    def test_import_secret(self):
         import secret
+        # Just to make sure it's properly formatted
+
+    def test_import_bwbot(self):
+        import bwbot
         # Just to make sure it's properly formatted
 
     @with_battery(BEHAVIOR_TESTS)
