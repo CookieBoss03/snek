@@ -44,7 +44,7 @@ class Logic:
             self.callbacks.log("not impl", *args)
         elif cmd == "die":  # all ids that died
             self.callbacks.log("not impl", *args)
-        elif cmd == "chat":  # id, message
+        elif cmd == "message":  # id, message
             self.callbacks.log("not impl", *args)
         elif cmd == "win":  # numwins, numlosses
             self.callbacks.log("not impl", *args)
