@@ -6,7 +6,7 @@ import secret  # username, password
 import time
 
 
-HOST = "gpn-tron.duckdns.org"
+HOST = "100.123.27.137"
 PORT = 4000
 TIME_START = time.time()
 
@@ -30,7 +30,7 @@ class PhysicalCallbackInterface(logic.CallbackInterface):
 
     def die(self):
         print(f"XX {timestamp()} yolo, now ded")
-        exit(1)
+
 
 
 async def main():
