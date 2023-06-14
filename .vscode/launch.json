@@ -5,10 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Bot on server",
             "type": "python",
             "request": "launch",
             "program": "bwbot.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Test",
+            "type": "python",
+            "request": "launch",
+            "program": "gameTest.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
