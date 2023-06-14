@@ -1,7 +1,7 @@
 #!/bin/false
 import numpy as np
 import random as rd
-
+from game import Helpers
 class CallbackInterface:
     def send(self, *args):       
         assert len(args) > 0
@@ -60,8 +60,10 @@ class Logic:
             self.snek.HandleDeath(args)
         elif cmd == "message":  # id, message
             self.callbacks.log("message", *args)
+            self.snek.HandleMessage(args)
         elif cmd == "win":  # numwins, numlosses
             self.callbacks.log("win", *args)
+            self.snek.HandleWin()
         elif cmd == "lose":  # numwins, numlosses
             self.callbacks.log("lose", *args)
         else:
@@ -74,6 +76,7 @@ class Snek:
         self.bots = []
         self.chosenDirection = "down"
         self.chosenMessage = "Hello bissame!"
+        self.helpers = Helpers()
         
     def Reset(self):
         self.bots = []
@@ -83,7 +86,16 @@ class Snek:
         self.bots.append(id)
         self.lastPositions.__setitem__(id, -1)
 
-        
+    def HandleMessage(self, args):
+        id = args[0]
+        msg = args[1]
+        if(id != self.id):
+            self.callbacks.chat("Hey " + id +", Que te caillas!")
+
+    
+    def HandleWin(self):
+        self.callbacks.chat("You dont even come close to me, you dirty little rats!")
+
     def HandleMotd(self):
         NotImplemented
 
@@ -108,14 +120,15 @@ class Snek:
         #update danger Matrix:
         if self.lastPositions[id] != -1:
             for pos in self.GetAdjacentCells(self.lastPositions[id]):
-                self.dangers[pos[0], pos[1]] -= 1
+                self.dangers[pos[0], pos[1]] -= 2
         for pos in self.GetAdjacentCells((x,y)):
-            self.dangers[pos[0], pos[1]] += 1
+            self.dangers[pos[0], pos[1]] += 3
         #update position matrix and last position
         self.positions[x, y] = id
         self.lastPositions[id] = (x,y)
     
     def HandleTick(self):
+        self.helpers.visualizeMatrix((self.dangers, self.positions), "dangerMap.txt", True)
         self.callbacks.move(self.chosenDirection)
 
 
@@ -128,13 +141,16 @@ class Snek:
         self.SendMessage()
 
     def HandleDeath(self, ids : list):
+        self.callbacks.chat("Hahaha you noobs!")
         for id in ids:
             if self.bots.__contains__(int(id)):
+                
                 self.bots.remove(int(id))
         for x in range(self.mapWidth):
             for y in range(self.mapHeight):
                 if ids.__contains__(str(self.positions[x,y])):
                     self.positions[x,y] = -1
+        
 
 
     def ChooseDirection(self):

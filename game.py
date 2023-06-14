@@ -103,6 +103,19 @@ class Helpers:
             for log in game.log.getLogs():
                 file.write(log + '\n')
 
+    def visualizeMatrix(self, matrixes, filename, replaceMinus1:bool):
+        with open(filename, 'w') as file:
+            for matrix in matrixes:
+                for row in (matrix):
+                    for element in (row):
+                        if replaceMinus1 and element == -1:
+                            file.write(".")
+                        else:
+                            file.write(str(element))
+                        file.write(' ')  # Add space between elements for better readability
+                    file.write('\n')
+                file.write('----------------------\n')
+
     def getCollidedPlayers(self, positions):
         collided_players = set()
         # Find players with the same next position
