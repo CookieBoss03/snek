@@ -14,3 +14,6 @@ Player 0 moved up to cell (5, 3).
 ---------------
 Player 0 moved up to cell (5, 3)and died due to collision with Player Body
 ---------------
+---------------
+---------------
+---------------

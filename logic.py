@@ -29,7 +29,7 @@ class Logic:
         self.username = username
         self.password = password
         self.callbacks = callbacks
-        self.snek = Snek(callbacks)
+        self.snek = Snek2(callbacks)
         self.bots = []
 
 
@@ -38,7 +38,6 @@ class Logic:
             self.callbacks.log("motd", args)
             self.callbacks.join(self.username, self.password)
             self.snek.HandleMotd()
-            # self.callbacks.move("left")
         elif cmd == "player":
             self.snek.HandlePlayer(args)
         elif cmd == "error":
@@ -50,8 +49,6 @@ class Logic:
         elif cmd == "pos":  # id, x, y
             self.callbacks.log("pos", *args)
             self.snek.HandlePos(args)
-            if int(args[0]) == self.snek.bots[-1]:
-                self.snek.HandleEndOfInfo()
         elif cmd == "tick":  # no-arg
             self.callbacks.log("tick", *args)
             self.snek.HandleTick()
@@ -70,6 +67,165 @@ class Logic:
             self.callbacks.log("unknown packet type?!", *args)
             self.callbacks.die()
 
+
+class Map:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.map = np.full((width, height), -1)
+    
+    def setTile(self, pos, id):
+        self.map[pos[0], pos[1]] = id
+    
+    def removePlayer(self, id):
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.map[x, y] == id:
+                    self.map[x, y] = -1
+    
+    def isFree(self, pos):
+        # convert x and y to wrap around map
+        x, y = pos
+        x = x % self.width
+        y = y % self.height
+        return self.map[x, y] == -1
+    
+    def getUpTile(self, pos):
+        return self.map[pos[0], pos[1] - 1]
+    
+    def getDownTile(self, pos):
+        return self.map[pos[0], pos[1] + 1]
+    
+    def getLeftTile(self, pos):
+        return self.map[pos[0] - 1, pos[1]]
+    
+    def getRightTile(self, pos):
+        return self.map[pos[0] + 1, pos[1]]
+
+    def printMapToFile(self):
+        with open("map.txt", "w") as file:
+            for y in range(self.height):
+                for x in range(self.width):
+                    id = self.map[x, y]
+                    if id == -1:
+                        file.write(".")
+                    else:
+                        file.write(str(id))
+                file.write("\n")
+
+class Player:
+    def __init__(self, id, name, map):
+        self.id = id
+        self.name = name
+        self.map = map
+    
+    def updatePosition(self, pos):
+        self.map.setTile(pos, self.id)
+    
+    def die(self):
+        self.pos = None
+        self.map.removePlayer(self.id)
+        self.dead = True
+
+class Snek2:
+    def __init__(self, callbacks):
+        self.game_running = False
+        self.callbacks = callbacks
+        self.chosenMessage = None
+        self.players = []
+        for i in range(100):
+            self.players.append(None)
+        
+    def Reset(self):
+        self.players = []
+        for i in range(100):
+            self.players.append(None)
+
+    def HandlePlayer(self, args):
+        id = int(args[0])
+        name = args[1]
+        self.players[id] = Player(id, name, self.map)
+    
+    def HandleWin(self):
+        self.chosenMessage = "You dont even come close to me, fools!"
+
+    def HandleMotd(self):
+        #self.callbacks.chat("Perish before the new King Léo, second of his name!")
+        self.chosenMessage = "Make place for Ser Leo, always moving up!"
+        self.chosenDirection = "up"
+
+    def HandleGame(self, args):
+        self.game_running = True
+        self.Reset()
+        self.id = int(args[2])
+        self.mapWidth = int(args[0])
+        self.mapHeight = int(args[1])
+        self.map = Map(self.mapWidth, self.mapHeight)
+
+    def HandlePos(self, args):
+        id = int(args[0])
+        x = int(args[1])
+        y = int(args[2])
+        self.players[id].updatePosition((x, y))
+
+    def HandleTick(self):
+        if self.game_running:
+            direction = self.ChooseDirectionBasic()
+            self.callbacks.move(direction)
+            if self.chosenMessage:
+                self.callbacks.chat(self.chosenMessage)
+                self.chosenMessage = None
+        self.map.printMapToFile()
+
+    def HandleDeath(self, ids : list):
+        for id in ids:
+            self.players[int(id)].die()
+        if self.player.dead:
+            self.game_running = False
+
+    def HandleMessage(eslf, args):
+        pass
+
+    def player(self):
+        return self.players[self.id]
+    
+    def ChooseDirectionBasic(self):
+        # this bot chooses first free square
+        dir = "up"
+        if self.map.isFree(self.map.getUpTile(self.player().pos)):
+            dir = "up"
+        elif self.map.isFree(self.map.getLeftTile(self.player().pos)):
+            dir = "left"
+        elif self.map.isFree(self.map.getDownTile(self.player().pos)):
+            dir = "down"
+        elif self.map.isFree(self.map.getRightTile(self.player().pos)):
+            dir = "right"
+        return dir
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Snek:
     def __init__(self, callbacks):
         self.callbacks = callbacks
@@ -86,23 +242,12 @@ class Snek:
         self.bots.append(id)
         self.lastPositions.__setitem__(id, -1)
 
-    def HandleMessage(self, args):
-        id = args[0]
-        msg = args[1]
-        if(id != self.id):
-            self.callbacks.chat("Hey " + id +", Que te caillas!")
-
     
     def HandleWin(self):
         self.callbacks.chat("You dont even come close to me, you dirty little rats!")
 
     def HandleMotd(self):
         NotImplemented
-
-    def SendMessage(self):
-        if self.chosenMessage != "":
-            self.callbacks.chat(self.chosenMessage)
-        self.chosenMessage = ""
 
     def HandleGame(self, args):
         self.Reset()
