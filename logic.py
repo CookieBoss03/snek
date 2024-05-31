@@ -77,6 +77,13 @@ class Map:
     def setTile(self, pos, id):
         self.map[pos[0], pos[1]] = id
     
+    def getTile(self, pos):
+        if pos == None or pos == -1:
+            print('ERROR: pos is None (in getTile)')
+            return None
+        print("Pos: ", pos)
+        return self.map[pos[0]% self.width, pos[1]% self.height]
+    
     def removePlayer(self, id):
         for x in range(self.width):
             for y in range(self.height):
@@ -84,23 +91,19 @@ class Map:
                     self.map[x, y] = -1
     
     def isFree(self, pos):
-        # convert x and y to wrap around map
-        x, y = pos
-        x = x % self.width
-        y = y % self.height
-        return self.map[x, y] == -1
+        return self.getTile(pos) == -1
     
     def getUpTile(self, pos):
-        return self.map[pos[0], pos[1] - 1]
+        return self.getTile((pos[0], pos[1] - 1))
     
     def getDownTile(self, pos):
-        return self.map[pos[0], pos[1] + 1]
+        return self.getTile((pos[0], pos[1] + 1))
     
     def getLeftTile(self, pos):
-        return self.map[pos[0] - 1, pos[1]]
+        return self.getTile((pos[0] - 1, pos[1]))
     
     def getRightTile(self, pos):
-        return self.map[pos[0] + 1, pos[1]]
+        return self.getTile((pos[0] + 1, pos[1]))
 
     def printMapToFile(self):
         with open("map.txt", "w") as file:
@@ -118,8 +121,10 @@ class Player:
         self.id = id
         self.name = name
         self.map = map
+        self.pos = None
     
     def updatePosition(self, pos):
+        self.pos = pos
         self.map.setTile(pos, self.id)
     
     def die(self):
@@ -180,7 +185,7 @@ class Snek2:
     def HandleDeath(self, ids : list):
         for id in ids:
             self.players[int(id)].die()
-        if self.player.dead:
+        if self.player().dead:
             self.game_running = False
 
     def HandleMessage(eslf, args):
